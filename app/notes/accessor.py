@@ -59,7 +59,7 @@ class ContentManager:
         await self.session.commit()
         return db_note
 
-    async def delete_archive_note(self, note_id: int, user_id: int):
+    async def delete_note(self, note_id: int, user_id: int):
         db_note = await self.get_note_by_id(note_id)
         assert db_note.user_id == user_id  # user can delete only their notes
         await self.session.delete(db_note)
