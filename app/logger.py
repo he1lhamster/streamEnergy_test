@@ -1,4 +1,3 @@
-import logging
 from loguru import logger
 from fastapi import Request, HTTPException
 import sys

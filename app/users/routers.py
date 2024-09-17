@@ -19,12 +19,12 @@ async def register(
     return user
 
 
-@router.post("/auth/exist")
+@router.get("/auth/exist")
 async def register(
-        user_exist: UserExistTelegram,
+        telegram_id: int,
         user_manager: UserManager = Depends(get_user_manager)
 ):
-    user = await user_manager.is_user_exist_by_telegram_id(user_exist.telegram_id)
+    user = await user_manager.is_user_exist_by_telegram_id(telegram_id)
     return user
 
 

@@ -6,19 +6,25 @@ from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+from dotenv import load_dotenv
 
-from alembic import context
+load_dotenv()
 
 sys.path.append(os.path.join(sys.path[0], 'app'))
-
 from config import settings
 from database import Base
 from notes.models import *
 from users.models import *
 
+from alembic import context
+
 config = context.config
-section = config.config_ini_section
-config.set_section_option(section, "sqlalchemy_url", settings.DB_URL)
+DB_URL = os.getenv("DB_URL")
+
+config.set_main_option('sqlalchemy.url', DB_URL)
+
+# section = config.config_ini_section
+# config.set_section_option(section, "sqlalchemy_url", settings.DB_URL)
 # config.get_main_option("sqlalchemy_url", settings.DB_URL)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
