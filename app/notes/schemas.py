@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -21,3 +23,14 @@ class NoteUpdate(BaseModel):
     content: str
     tags: list[str]
 
+
+class NoteResponse(BaseModel):
+    id: int
+    title: str
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    tags: list[str]
+
+    class Config:
+        from_attributes = True

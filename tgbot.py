@@ -66,9 +66,9 @@ class UserCheckMiddleware(BaseMiddleware):
                 return await handler(event, data)
 
             await event.answer(
-                "Привет! Перед началом использования бота, пожалуйста, введите свою почту для привязки аккаунта.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                "Hello! Before starting using this bot you have to link your Telegram accounts with already registered account in system.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
     [
-        InlineKeyboardButton(text='Связать аккаунты', callback_data='link_accounts')
+        InlineKeyboardButton(text='Link Accounts', callback_data='link_accounts')
     ]]))
             await data["state"].set_state("awaiting_email")
         else:
@@ -92,13 +92,13 @@ inline_kb = InlineKeyboardMarkup(inline_keyboard=[
 @router.message(Command(commands=['start', 'help']))
 async def command_start_handler(message: Message):
     user = message.from_user.username
-    await message.answer(f'Привет, {user}! Я бот для тестирования FastAPI приложения.', reply_markup=inline_kb)
+    await message.answer(f"Hi, {user}! I'm a telegram bot for FastAPI test app 🙌", reply_markup=inline_kb)
 
 
 @router.callback_query(F.data == "link_accounts")
 async def add_note_start_handler(call: CallbackQuery, state: FSMContext):
     await call.answer()
-    await call.message.answer("Enter your email")
+    await call.message.answer("Please, provide me your registered email")
     await state.set_state(LinkEmailForm.email)
 
 
@@ -109,7 +109,6 @@ async def handle_email(message: Message, state: FSMContext):
         valid_email = validate_email(email)
 
         telegram_id = message.from_user.id
-        print(f'{email=}, {telegram_id=}')
 
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{FASTAPI_URL}users/auth/link-accounts", json={
@@ -117,14 +116,14 @@ async def handle_email(message: Message, state: FSMContext):
                 "telegram_id": telegram_id
             })
             if response.status_code == 200:
-                await message.answer("Аккаунт успешно привязан и вы авторизованы!", reply_markup=inline_kb)
+                await message.answer("Accounts successfully linked!", reply_markup=inline_kb)
                 await state.clear()
             else:
-                await message.answer("Не удалось привязать аккаунт. Убедитесь, что вы зарегистрированы в системе.")
+                await message.answer("An error occupied during linking accounts. Pleasy try again")
                 await state.clear()
 
     except EmailNotValidError as e:
-        await message.answer(f"Неправильный email: {str(e)}. Попробуйте еще раз.")
+        await message.answer(f"Wrong email: {str(e)}. Please try again.")
         return
 
 
@@ -177,6 +176,7 @@ async def save_note_handler(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "search_by_tag")
 async def add_note_start_handler(call: CallbackQuery, state: FSMContext):
+    await call.answer()
     await call.message.answer("Please enter the tag you want to search for:")
     await state.set_state("awaiting_tag")
 
@@ -190,7 +190,7 @@ async def handle_tag_search(message: Message, state: FSMContext):
         if response.status_code == 200:
             notes = response.json()
             if notes:
-                response = "\n\n".join([f"Title: {note['title']}\nContent: {note['content']}\nTags: {', '.join([x['name'] for x in note['tags']])}" for note in notes])
+                response = "\n\n".join([f"Title: {note['title']}\nContent: {note['content']}\nTags: {', '.join([x for x in note['tags']])}" for note in notes])
                 await message.reply(f"Notes found: \n\n{response}")
             else:
                 await message.reply("No notes found with this tag.")
@@ -207,7 +207,7 @@ async def show_my_notes_handler(call: CallbackQuery, state: FSMContext):
         if response.status_code == 200:
             notes = response.json()
             if notes:
-                notes_text = "\n\n".join([f"Title: {note['title']}\nContent: {note['content']}\nTags: {', '.join([x['name'] for x in note['tags']])}" for note in notes])
+                notes_text = "\n\n".join([f"Title: {note['title']}\nContent: {note['content']}\nTags: {', '.join([x for x in note['tags']])}" for note in notes])
                 await call.message.answer(f"Your notes:\n\n{notes_text}")
                 await call.answer()
             else:
@@ -217,12 +217,10 @@ async def show_my_notes_handler(call: CallbackQuery, state: FSMContext):
 
 
 async def main() -> None:
-    print('bot try')
     while True:
         try:
             await dp.start_polling(bot)
         except Exception as e:
-            print('err')
             await asyncio.sleep(3)
 
 

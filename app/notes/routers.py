@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Request
 from loguru import logger
 from starlette import status
@@ -5,7 +7,7 @@ from starlette.responses import JSONResponse
 
 from limiter import limiter
 from notes.accessor import ContentManager
-from notes.schemas import NoteCreate, TagSearch, NoteUpdate
+from notes.schemas import NoteCreate, TagSearch, NoteUpdate, NoteResponse
 from users.auth import current_user
 from users.manager import get_user_manager, UserManager
 from users.models import User
@@ -16,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=NoteResponse)
 @limiter.limit("30/minute")
 async def create_note(request: Request,
                       note_create: NoteCreate,
@@ -26,13 +28,13 @@ async def create_note(request: Request,
     try:
         new_note = await accessor.create_note(note_create, user.id)
         logger.info(f"Create note: User: {user.id}, Note: {new_note.id}")
-        return new_note
+        return NoteResponse.from_orm(new_note)
     except Exception as e:
         logger.error(f"Error while creating note for {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while creating note: {e}. Please try again."}
 
 
-@router.patch("/{note_id}")
+@router.patch("/{note_id}", response_model=NoteResponse)
 @limiter.limit("30/minute")
 async def update_note(request: Request,
                       note_id: int,
@@ -43,14 +45,21 @@ async def update_note(request: Request,
     try:
         new_note = await accessor.update_note(note_id, note_update, user.id)
         logger.info(f"Update note: User: {user.id}, Note: {new_note.id}")
-        return new_note
+        return NoteResponse(
+            id=new_note.id,
+            title=new_note.title,
+            content=new_note.content,
+            created_at=new_note.created_at,
+            updated_at=new_note.updated_at,
+            tags=[tag.name for tag in new_note.tags]
+        )
     except Exception as e:
         logger.error(f"Error while updating note for {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while updating note: {e}. Please try again."}
 
 
-@router.get("")
-@limiter.limit("30/minute")
+@router.get("", response_model=List[NoteResponse])
+@limiter.limit("5/minute")
 async def get_notes(request: Request,
                     user: User = Depends(current_user),
                     accessor: ContentManager = Depends()
@@ -58,13 +67,20 @@ async def get_notes(request: Request,
     try:
         notes = await accessor.get_notes_by_user_id(user.id)
         logger.info(f"Get notes for User: {user.id}")
-        return notes
+        return [NoteResponse(
+            id=note.id,
+            title=note.title,
+            content=note.content,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            tags=[tag.name for tag in note.tags]
+        ) for note in notes]
     except Exception as e:
         logger.error(f"Error while getting notes for {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while getting notes: {e}. Please try again."}
 
 
-@router.get("/search")
+@router.get("/search", response_model=List[NoteResponse])
 @limiter.limit("30/minute")
 async def search_notes_by_tag(request: Request,
                               tag_search: TagSearch,
@@ -74,10 +90,17 @@ async def search_notes_by_tag(request: Request,
     try:
         notes = await accessor.get_notes_by_tag(tag_search, user_id=user.id)
         logger.info(f"Search notes by Tag: {tag_search} for User: {user.id}")
-        return notes
+        return [NoteResponse(
+            id=note.id,
+            title=note.title,
+            content=note.content,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            tags=[tag.name for tag in note.tags]
+        ) for note in notes]
     except Exception as e:
         logger.error(f"Error while Search notes by Tag: {tag_search} for {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while search notes by tag {tag_search}: {e}. Please try again."}
 
 
 @router.delete("/{note_id}")
@@ -93,12 +116,12 @@ async def delete_note(request: Request,
         return
     except Exception as e:
         logger.error(f"Error while deleting Note: {note_id} for User: {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while deleting note: {e}. Please try again."}
 
 
 # ----------- Telegram Handlers -------------
 
-@router.post("/tg/{telegram_id}", status_code=status.HTTP_201_CREATED)
+@router.post("/tg/{telegram_id}", status_code=status.HTTP_201_CREATED, response_model=NoteResponse)
 @limiter.limit("30/minute")
 async def create_note_tg(request: Request,
                          telegram_id: int,
@@ -110,13 +133,20 @@ async def create_note_tg(request: Request,
         user = await user_manager.user_db.get_by_telegram_id(telegram_id)
         new_note = await accessor.create_note(note_create, user.id)
         logger.info(f"Create note: User: {user.id}, Note: {new_note.id}")
-        return new_note
+        return NoteResponse(
+            id=new_note.id,
+            title=new_note.title,
+            content=new_note.content,
+            created_at=new_note.created_at,
+            updated_at=new_note.updated_at,
+            tags=[tag.name for tag in new_note.tags]
+        )
     except Exception as e:
         logger.error(f"TG: Error while creating note for {user.id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while creating note: {e}. Please try again."}
 
 
-@router.patch("/tg/{telegram_id}/{note_id}")
+@router.patch("/tg/{telegram_id}/{note_id}", response_model=NoteResponse)
 @limiter.limit("30/minute")
 async def update_note_tg(request: Request,
                          telegram_id: int,
@@ -129,13 +159,20 @@ async def update_note_tg(request: Request,
         user = await user_manager.user_db.get_by_telegram_id(telegram_id)
         new_note = await accessor.update_note(note_id, note_update, user.id)
         logger.info(f"Update note: User: {user.id}, Note: {new_note.id}")
-        return new_note
+        return NoteResponse(
+            id=new_note.id,
+            title=new_note.title,
+            content=new_note.content,
+            created_at=new_note.created_at,
+            updated_at=new_note.updated_at,
+            tags=[tag.name for tag in new_note.tags]
+        )
     except Exception as e:
         logger.error(f"TG: Error while updating note for User with telegram_id {telegram_id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while updating note: {e}. Please try again."}
 
 
-@router.get("/tg/{telegram_id}")
+@router.get("/tg/{telegram_id}", response_model=List[NoteResponse])
 @limiter.limit("5/minute")
 async def get_notes_tg(request: Request,
                        telegram_id: int,
@@ -146,13 +183,20 @@ async def get_notes_tg(request: Request,
         user = await user_manager.user_db.get_by_telegram_id(telegram_id)
         notes = await accessor.get_notes_by_user_id(user.id)
         logger.info(f"Get notes for User: {user.id}")
-        return notes
+        return [NoteResponse(
+            id=note.id,
+            title=note.title,
+            content=note.content,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            tags=[tag.name for tag in note.tags]
+        ) for note in notes]
     except Exception as e:
         logger.error(f"TG: Error while getting notes for User with telegram_id {telegram_id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while getting notes: {e}. Please try again."}
 
 
-@router.get("/tg/{telegram_id}/search")
+@router.get("/tg/{telegram_id}/search", response_model=List[NoteResponse])
 @limiter.limit("30/minute")
 async def search_notes_by_tag_tg(request: Request,
                                  telegram_id: int,
@@ -164,11 +208,17 @@ async def search_notes_by_tag_tg(request: Request,
         user = await user_manager.user_db.get_by_telegram_id(telegram_id)
         notes = await accessor.get_notes_by_tag(tag_search, user_id=user.id)
         logger.info(f"Search notes by Tag: {tag_search} for User: {user.id}")
-
-        return notes
+        return [NoteResponse(
+            id=note.id,
+            title=note.title,
+            content=note.content,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            tags=[tag.name for tag in note.tags]
+        ) for note in notes]
     except Exception as e:
         logger.error(f"TG: Error while Search notes by Tag: {tag_search} for User with telegram_id {telegram_id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while search notes by tag {tag_search}: {e}. Please try again."}
 
 
 @router.delete("/tg/{telegram_id}/{note_id}")
@@ -186,4 +236,4 @@ async def delete_note_tg(request: Request,
         return
     except Exception as e:
         logger.error(f"TG: Error while deleting Note: {note_id} for User with telegram_id {telegram_id}: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Error while deleting note: {e}. Please try again."}
