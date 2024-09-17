@@ -3,7 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends, Request
 from loguru import logger
 from starlette import status
-from starlette.responses import JSONResponse
 
 from limiter import limiter
 from notes.accessor import ContentManager
@@ -16,6 +15,16 @@ router = APIRouter(
     prefix="/notes",
     tags=["notes", ],
 )
+
+
+"""
+Хэндлеры для работы с заметками. Реализован CRUD для заметок, а также возможность поиска заметок по тегу. 
+Все методы требуют, чтобы юзер был авторизован, для всех методов используется валидация данных Pydantic.
+Здесь разделены слои работы приложения -хэндлеры лишь вызывают соответствующий метод из контент-менеджера 
+и не знают, как и откуда достаются эти данные.
+Методы для телеграм-бота выделены отдельно, посколько для них неприемлима проверка авторизации через JWT токен.
+Хэндлеры логируются, в.т.ч. ловятся ошибки. Пользователю сообщается об ошибке. 
+"""
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=NoteResponse)

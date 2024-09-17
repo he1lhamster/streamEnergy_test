@@ -11,7 +11,7 @@ DATABASE_URL = settings.DB_URL
 class Base(DeclarativeBase):
     pass
 
-
+# используем асинхронный движок для базы данных
 async_engine = create_async_engine(DATABASE_URL, poolclass=NullPool)
 async_session_maker = async_sessionmaker(
     async_engine,

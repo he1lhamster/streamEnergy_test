@@ -9,6 +9,7 @@ from notes.models import Note, Tag
 from notes.schemas import NoteCreate, NoteUpdate, TagSearch
 
 
+# создаем класс, который служит прослойкой между БД и сервисным уровнем
 class ContentManager:
     def __init__(self, session: Session = Depends(get_async_session)):
         self.session = session
@@ -22,6 +23,7 @@ class ContentManager:
         self.session.add(db_note)
         await self.session.commit()
 
+        # добавляем связи many-to-many между заметками и тегами
         for tag_name in note.tags:
             result = await self.session.execute(
                 select(Tag).where(Tag.name == tag_name)

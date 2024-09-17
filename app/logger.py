@@ -3,10 +3,13 @@ from loguru import logger
 from fastapi import Request, HTTPException
 import sys
 from datetime import datetime
-
 from starlette.responses import JSONResponse
-
 from main import app
+
+"""
+настраиваем логгер для вывода в консоль и для сохранения файлов в папку logs
+логи будут обновляться раз в день в 00:00, срок хранения 10 дней
+"""
 
 log_dir = "logs"
 if not os.path.exists(log_dir):
@@ -24,6 +27,7 @@ logger.add(
 )
 
 
+# логгер будет работать на уровне мидлвары
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"Request: {request.method} {request.url}")
@@ -36,6 +40,7 @@ async def log_requests(request: Request, call_next):
         raise
 
 
+# перехватываем ошибки сервера с кодом 500
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled Exception: {exc} from {request.url}")
@@ -45,6 +50,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+# перехватываем остальные ошибки с другими HTTP кодами и отдаем детали в ответе
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     logger.warning(f"HTTP Exception: {exc.detail} on {request.url}")

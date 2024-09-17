@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-
 from users.auth import fastapi_users, auth_backend
 from users.manager import UserManager, get_user_manager
 from users.schemas import UserUpdate, UserExistTelegram, UserRead, UserCreate
@@ -10,6 +9,7 @@ router = APIRouter(
 )
 
 
+# метод для связывания аккаунта с телеграмом
 @router.post("/auth/link-accounts")
 async def register(
         user_update: UserUpdate,
@@ -19,6 +19,7 @@ async def register(
     return user
 
 
+# метод для проверки, существует ли пользователь в БД с таким телеграм_ид
 @router.get("/auth/exist")
 async def register(
         telegram_id: int,
@@ -28,6 +29,7 @@ async def register(
     return user
 
 
+# подключаем стандартные методы для работы с юзерами из библиотеки
 router.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"])
 router.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix="/auth", tags=["auth"])
 # router.include_router(fastapi_users.get_users_router(), prefix="/", tags=["users"])

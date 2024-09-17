@@ -4,6 +4,7 @@ from database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
+# заметка, временнЫе поля будут заполняться сервером БД автоматически
 class Note(Base):
     __tablename__ = "notes"
 
@@ -27,6 +28,7 @@ class Tag(Base):
     notes: Mapped[list["Note"]] = relationship("Note", secondary="note_tags", back_populates="tags", lazy='selectin')
 
 
+# таблица для связей many-to-many
 class NoteTag(Base):
     __tablename__ = "note_tags"
 

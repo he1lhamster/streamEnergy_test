@@ -12,6 +12,7 @@ from users.models import User
 from users.schemas import UserUpdate
 
 
+# расширяем базовый функционал методов для работы с юзерами, добавляем получение по телеграм_ид
 class SQLAlchemyUserDatabaseExtend(SQLAlchemyUserDatabase):
     async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
         query = await self.session.execute(select(User).where(User.telegram_id == telegram_id))
@@ -23,6 +24,7 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabaseExtend(session, User)
 
 
+# расширяем базовый менеджер для работы с юзерами, указывая свои настройки и определяя методы
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.JWT_SECRET
     verification_token_secret = settings.JWT_SECRET
@@ -48,6 +50,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         return await self.user_db.get_by_telegram_id(telegram_id)
 
 
+# используется для инъекции зависимости
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 

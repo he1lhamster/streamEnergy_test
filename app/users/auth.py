@@ -9,10 +9,11 @@ from users.models import User
 
 SECRET = settings.JWT_SECRET
 
-
+# в качестве транспорта используется Bearer
 bearer_transport = BearerTransport(tokenUrl="users/auth/jwt/login")
 
 
+# в качестве механизма аутентификации - JWT
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
 
@@ -23,6 +24,7 @@ auth_backend = AuthenticationBackend(
     get_strategy=get_jwt_strategy,
 )
 
+# указываем классу FastAPIUsers желаемую модель юзера и тип идентификатора
 fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
     [auth_backend]

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
 
+# переопределяем базовый класс из fastapi-users, добавляем связь с заметками и ТГ
 class User(SQLAlchemyBaseUserTable[int], Base):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
