@@ -27,13 +27,13 @@
 (примечание 2: для запуска можно использовать Make файл, его команды будут указаны в скобках)
 
 
-Для запуска необходимо выполнить команду
+Для запуска необходимо выполнить команду (Make buildup)
 ```
 	docker-compose up --build -d
 ```
 ![containers in docker](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/docker_run.png)
 
-После чего нужно вызвать Alembic для выполнения автоматиизированных миграций:
+После чего нужно вызвать Alembic для выполнения автоматиизированных миграций (Make alembic)
 ```
 docker-compose exec fastapi-app alembic revision --autogenerate -m "init migration"
 docker-compose exec fastapi-app alembic upgrade head
