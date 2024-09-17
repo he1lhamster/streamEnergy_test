@@ -31,53 +31,53 @@
 ```
 	docker-compose up --build -d
 ```
-![containers in docker](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/docker_run.png)
+![containers in docker](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/docker_run.png)
 
 После чего нужно вызвать Alembic для выполнения автоматиизированных миграций:
 ```
 docker-compose exec fastapi-app alembic revision --autogenerate -m "init migration"
 docker-compose exec fastapi-app alembic upgrade head
 ```
-![alembic](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/alembic.png)
+![alembic](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/alembic.png)
 Убедимся что сервер запущен и работает:
-![hello world](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/helloworld.png)
+![hello world](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/helloworld.png)
 
 # Пользователи
 Для работы с пользователями была выбрана библиотека [fastapi-users](https://fastapi-users.github.io/), которая автоматизирует многие стандартные процессы вроде регистрации и аутентификации. Также она предлагает готовое решение и для работы с JWT, в качестве транспорта выбран способ носитель Bearer. Для простейшей демонатрции работы воспользуемся программой Postman.
 
 Регистрация пользователя:
-![user_reg](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/user_reg.png)
+![user_reg](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/user_reg.png)
 
 Аутентификация и получения Access Token:
-![login](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/login.png)
+![login](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/login.png)
 
 Проверка эндпоинтов, требующих авторизации. Отправка запроса без токена:
-![unauthorizied](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/unauthorizied.png)
+![unauthorizied](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/unauthorizied.png)
 
 
 Теперь попробуем зайти на этот же эндпоинт с помощью токена:
-![auth_endpoint](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/auth_endpoint.png)
+![auth_endpoint](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/auth_endpoint.png)
 
 ## Rate Limiter
 Не стоит злоупотреблять многочисленными запросами, на сервере установлен Rate Limiter:
-![rate_limiter](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/rate_limiter.png)
+![rate_limiter](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/rate_limiter.png)
 Для этих целей была выбрана библиотека [slowapi](https://github.com/laurentS/slowapi), лимитер работает как мидлвара и ему нужно указать, какие именно хэндлеры он должен отслеживать
 
 ## Telegram Bot
 Разработан [телеграм бот](https://t.me/stream_energy_test_bot ) на основе библиотеки aiogram (v3). Перед использованием бот попросит вас указать почту, уже зарегистрированную в приложении, чтобы связать аккаунт в БД с телеграм акаунтом. На этом этапе есть валидация введенного имэйл адреса:
-![link_accounts](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/link_accounts.png)
+![link_accounts](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/link_accounts.png)
 
 Пробуем добавить заметку. Здесь бот проверяет корректность тегов, они могут содержать только буквы и цифры:
-![add_note](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/add_note.png)
+![add_note](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/add_note.png)
 
 Пробуем поискать заметки по введенным ранее тегам к ним:
-![search_note](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/search_note.png)
+![search_note](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/search_note.png)
 
 ## Логгер
 Для логирования была выбрана библиотека [loguru](https://github.com/Delgan/loguru), настроенная таким образом, чтобы писать логи в файл и в консоль:
-![logs](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/logs.png)
+![logs](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/logs.png)
 Проверим работоспособность логгера вручную:
-![log_test](https://github.com/he1lhamster/streamEnergy_test/blob/main/images/log_test.png)
+![log_test](https://github.com/he1lhamster/streamEnergy_test/blob/main/imgs/log_test.png)
 
 ## Валидация данных
 За валидацию данных, полученных от пользователя и отправленных сервером отвечает Pydantic, плотно сплетенный с самим фреймворком FastAPI. В хэндлерах используются схемы данных для обмениваемых объектов.
