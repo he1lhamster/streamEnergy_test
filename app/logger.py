@@ -1,3 +1,4 @@
+import os
 from loguru import logger
 from fastapi import Request, HTTPException
 import sys
@@ -7,12 +8,16 @@ from starlette.responses import JSONResponse
 
 from main import app
 
+log_dir = "logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 logger.remove()
 logger.add(
     sys.stderr, format="{time} {level} {message}", level="INFO", colorize=True
 )
 logger.add(
-    f"logs/{datetime.now().strftime('%Y-%m-%d')}.log",
+    f"{log_dir}/{datetime.now().strftime('%Y-%m-%d')}.log",
     rotation="00:00",
     retention="10 days",
     compression="zip"
